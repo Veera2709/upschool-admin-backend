@@ -1,0 +1,13 @@
+data:
+  config:
+    accessKeyId:
+      - AKIAQREMEI3PYIN7AL7N
+    secretAccessKey:
+      - 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
+
+  randomSecretKey:
+    secretKey:
+      - Sotr07eb7iph1R+tAdOy  
+  sendOtpArn:
+    arn:
+      - arn:aws:sns:ap-south-1:036801103583:testing-upschool-sendOTP
