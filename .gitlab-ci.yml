@@ -35,6 +35,8 @@ jobs:
       - name: Deploy
         run: |
           echo "Script in dev"
+          echo "AWS_ACCESS_KEY_ID" ${{ secrets.AWS_ACCESS_KEY_ID }}
+          echo "AWS_SECRET_ACCESS_KEY" ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           npx sls deploy --region ap-south-1 --stage dev --verbose
         env:
           CI_COMMIT_BRANCH: dev
