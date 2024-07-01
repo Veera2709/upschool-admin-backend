@@ -1,104 +1,39 @@
-name: CI/CD Pipeline
+image: node:latest
+dev_job:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  before_script:
+    - echo "Before Script in $CI_COMMIT_BRANCH"
+    - npm install
+  script:
+    - echo "Script in $CI_COMMIT_BRANCH"
+    - npx sls deploy --region ap-south-1 --stage $CI_COMMIT_BRANCH --verbose
+  environment:
+    name: $CI_COMMIT_BRANCH
 
-on:
-  push:
-    branches:
-      - dev
-      - testing
-      - uat
+testing_job:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "testing"'
+  before_script:
+    - echo "Before Script in $CI_COMMIT_BRANCH"
+    - npm install
+  script:
+    - echo "Script in $CI_COMMIT_BRANCH"
+    - npx sls deploy --region ap-south-1 --stage $CI_COMMIT_BRANCH --verbose
+  environment:
+    name: $CI_COMMIT_BRANCH
 
-jobs:
-  dev_job:
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'latest'
-        
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-
-      - name: Before Script
-        run: |
-          echo "Before Script in dev"
-          npm install
-        
-      - name: Deploy
-        run: |
-          echo "Script in dev"
-          echo "AWS_ACCESS_KEY_ID" ${{ secrets.AWS_ACCESS_KEY_ID }}
-          echo "AWS_SECRET_ACCESS_KEY" ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          npx sls deploy --region ap-south-1 --stage dev --verbose
-        env:
-          CI_COMMIT_BRANCH: dev
-
-  testing_job:
-    if: github.ref == 'refs/heads/testing'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'latest'
-        
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-
-      - name: Before Script
-        run: |
-          echo "Before Script in testing"
-          npm install
-        
-      - name: Deploy
-        run: |
-          echo "Script in testing"
-          npx sls deploy --region ap-south-1 --stage testing --verbose
-        env:
-          CI_COMMIT_BRANCH: testing
-
-  uat_job:
-    if: github.ref == 'refs/heads/uat'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 'latest'
-        
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-
-      - name: Before Script
-        run: |
-          echo "Before Script in uat"
-          npm install
-        
-      - name: Deploy
-        run: |
-          echo "Script in uat"
-          npx sls deploy --region ap-south-1 --stage uat --verbose
-        env:
-          CI_COMMIT_BRANCH: uat
+uat_job:
+  stage: deploy
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "uat"'
+  before_script:
+    - echo "Before Script in $CI_COMMIT_BRANCH"
+    - npm install
+  script:
+    - echo "Script in $CI_COMMIT_BRANCH"
+    - npx sls deploy --region ap-south-1 --stage $CI_COMMIT_BRANCH --verbose
+  environment:
+    name: $CI_COMMIT_BRANCH
