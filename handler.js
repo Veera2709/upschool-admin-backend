@@ -126,7 +126,7 @@ app.post("/v1/toggleUserStatus", validator.validUser, userController.toggleUserS
 app.post("/v1/bulkToggleUsersStatus", validator.validUser, userController.bulkToggleUsersStatus);
 
 app.post("/v1/searchUsers", validator.validUser, userController.searchUsers);
-app.post("/v1/usersPagination",  userController.usersPagination); //validator.validUser,
+app.post("/v1/usersPagination", validator.validUser, userController.usersPagination); //
 
 
 // Teacher : 
