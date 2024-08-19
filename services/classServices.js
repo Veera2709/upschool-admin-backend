@@ -37,6 +37,9 @@ exports.getAllClassBasedOnStatus = function (request, callback) {
             console.log(fetch_all_class_err);
             callback(fetch_all_class_err, fetch_all_class_response);
         } else {
+            fetch_all_class_response.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });
             callback(fetch_all_class_err, fetch_all_class_response);
         }
     })

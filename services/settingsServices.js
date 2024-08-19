@@ -9,7 +9,10 @@ exports.fetchContentCategories = async function (request, callback) {
         if (categories_err) {
             console.log(categories_err);
             callback(categories_err, categories_res);
-        } else {        
+        } else {
+            categories_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });          
             callback(0, categories_res);
         }
     })
@@ -263,6 +266,9 @@ exports.fetchContentDisclaimers = async function (request, callback) {
             console.log(disclaimer_err);
             callback(disclaimer_err, disclaimer_res);
         } else {        
+            disclaimer_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });  
             callback(0, disclaimer_res);
         }
     })
@@ -624,6 +630,9 @@ exports.fetchQuestionSources = async function (request, callback) {
             console.log(get_sources_err);
             callback(get_sources_err, get_sources_res);
         } else {        
+            get_sources_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });  
             callback(0, get_sources_res);
         }
     })
@@ -897,7 +906,10 @@ exports.fetchCognitiveSkills = async function (request, callback) {
         if (get_skills_err) {
             console.log(get_skills_err);
             callback(get_skills_err, get_skills_res);
-        } else {        
+        } else {  
+            get_skills_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });        
             callback(0, get_skills_res);
         }
     })

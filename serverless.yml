@@ -69,6 +69,10 @@ functions:
           method: POST
           cors: true
       - http:
+          path: /v1/fetchAllStudents
+          method: POST
+          cors: true
+      - http:
           path: /v1/editTopic
           method: POST
           cors: true

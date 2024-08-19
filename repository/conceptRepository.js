@@ -25,7 +25,7 @@ exports.getConceptBasedOnStatus = function (request, callback) {
                     ":common_id": constant.constValues.common_id,
                     ":concept_status": request.data.concept_status
                 },
-                ProjectionExpression: ["concept_id", "concept_title", "concept_digicard_id", "concept_group_id", "concept_question_id"],
+                ProjectionExpression: ["concept_id", "concept_title", "concept_digicard_id", "concept_group_id", "concept_question_id","updated_ts"],
                 // ProjectionExpression: ["concept_id", "concept_title", "concept_digicard_id", "concept_group_id", "concept_question_id"],
             }
 
