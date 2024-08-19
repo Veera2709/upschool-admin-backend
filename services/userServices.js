@@ -1281,6 +1281,9 @@ exports.fetchPaginatedUsers = function (request, callback) {
 			}
 		})
 	} else {
+		get_paginated_users_response.Items.sort((a, b) => {
+			return new Date(b.updated_ts) - new Date(a.updated_ts);
+		});  
 		callback(400, constant.messages.INVALID_REQUEST_FORMAT);
 	}
 }

@@ -346,35 +346,36 @@ exports.fetchDigiCardsBasedonStatus = function (request, callback) {
             callback(fetch_all_digicard_err, fetch_all_digicard_response);
         } else {
 
-            async function appendUrlS3(i)
-            {   
-                if(i < fetch_all_digicard_response.Items.length)
-                {
-                    if(fetch_all_digicard_response.Items[i].digicard_image && fetch_all_digicard_response.Items[i].digicard_image !== "N.A." && fetch_all_digicard_response.Items[i].digicard_image != "" && fetch_all_digicard_response.Items[i].digicard_image.includes("uploads/"))
-                    {
+            async function appendUrlS3(i) {   
+                if (i < fetch_all_digicard_response.Items.length) {
+                    if (fetch_all_digicard_response.Items[i].digicard_image && 
+                        fetch_all_digicard_response.Items[i].digicard_image !== "N.A." && 
+                        fetch_all_digicard_response.Items[i].digicard_image !== "" && 
+                        fetch_all_digicard_response.Items[i].digicard_image.includes("uploads/")) {
+                        
                         fetch_all_digicard_response.Items[i].digicard_imageURL = await helper.getS3SignedUrl(fetch_all_digicard_response.Items[i].digicard_image);
-
-                        i++;
-                        appendUrlS3(i);
-                    }
-                    else
-                    {
+                    } else {
                         fetch_all_digicard_response.Items[i].digicard_imageURL = "N.A.";
-                        i++;
-                        appendUrlS3(i);
                     }
-                }
-                else
-                {
-                    console.log("fetch_all_digicard_response.Items.length : ", fetch_all_digicard_response.Items.length);
+
+                    // Increment index and continue
+                    i++;
+                    appendUrlS3(i);
+                } else {
+                    // Sort by digi_card_updated_ts
+                    fetch_all_digicard_response.Items.sort((a, b) => {
+                        return new Date(b.digi_card_updated_ts) - new Date(a.digi_card_updated_ts);
+                    });
+
+                    console.log("fetch_all_digicard_response.Items.length: ", fetch_all_digicard_response.Items.length);
                     callback(0, fetch_all_digicard_response);
                 }
             }
             appendUrlS3(0);
-
         }
-    })
+    });
 }
+
 
 exports.fetchDigiIdAndName = function (request, callback) {
     digicardRepository.fetchIdAndNameOfDigicards(request, function (get_digi_idName_err, get_digi_idName_response) {

@@ -43,7 +43,10 @@ exports.getActiveArchivedSubject = async function (request, callback) {
         if (get_subject_err) {
             console.log(get_subject_err);
             callback(get_subject_err, get_subject_res);
-        } else {        
+        } else {
+            get_subject_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });        
             callback(0, get_subject_res);
         }
     })

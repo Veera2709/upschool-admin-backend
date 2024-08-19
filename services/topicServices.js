@@ -160,6 +160,9 @@ exports.fetchTopicsBasedonStatus = function (request, callback) {
             console.log(fetch_all_topic_err);
             callback(fetch_all_topic_err, fetch_all_topic_response);
         } else {
+            fetch_all_topic_response.Items.sort((a, b) => {
+                return new Date(b.topic_updated_ts) - new Date(a.topic_updated_ts);
+            });
             console.log("Fetch All Topics Successfully");
             callback(0, fetch_all_topic_response);
         }
