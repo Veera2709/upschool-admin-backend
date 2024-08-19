@@ -22,6 +22,8 @@ const teacherController = require('./controller/teacherController');
 const groupController = require('./controller/groupController');
 const blueprintController = require('./controller/blueprintController');
 const settingsController = require('./controller/settingsController');
+const studentController = require('./controller/studentController');
+
 const validator = require('./middleware/validator');
 
 app.use(bodyParser.urlencoded({
@@ -222,6 +224,9 @@ app.post("/v1/toggleBluePrintStatus", validator.validUser, blueprintController.t
 app.post("/v1/fetchIndividualBluePrint", validator.validUser, blueprintController.fetchIndividualBluePrint);
 
 app.post("/v1/deleteDynamoDBData", commonController.deleteDynamoDBData);
+
+// Students
+app.post("/v1/fetchAllStudents", studentController.fetchAllStudents);
 
 
 /** END ADMIN APIS **/

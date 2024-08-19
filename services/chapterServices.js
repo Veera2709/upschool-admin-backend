@@ -162,6 +162,9 @@ exports.fetchChaptersBasedonStatus = function (request, callback) {
             console.log(fetch_all_chapter_err);
             callback(fetch_all_chapter_err, fetch_all_chapter_response);
         } else {
+            fetch_all_chapter_response.Items.sort((a, b) => {
+                return new Date(b.chapter_updated_ts) - new Date(a.chapter_updated_ts);
+            });
             callback(0, fetch_all_chapter_response);
         }
     })
