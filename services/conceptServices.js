@@ -13,7 +13,10 @@ exports.getActiveArchivedConcepts = async function (request, callback) {
         if (get_concept_err) {
             console.log(get_concept_err);
             callback(get_concept_err, get_concept_res);
-        } else {        
+        } else {
+            get_concept_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });        
             callback(0, get_concept_res);
         }
     })

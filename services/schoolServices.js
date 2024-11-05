@@ -152,6 +152,9 @@ exports.getAllSchools = function (request, callback) {
                     }
                 }
                 else {
+                    fetch_all_school_response.Items.sort((a, b) => {
+                        return new Date(b.updated_ts) - new Date(a.updated_ts);
+                    });  
                     callback(0, fetch_all_school_response);
                 }
             }
