@@ -26,7 +26,7 @@ exports.getContentCategories = function (request, callback) {
                     ":category_status": request.data.category_status,
                     ":common_id": constant.constValues.common_id, 
                 },
-                ProjectionExpression: ["category_id", "category_name"], 
+                ProjectionExpression: ["category_id", "category_name","updated_ts"], 
             }
             console.log("REQUEST : ", read_params);
             DATABASE_TABLE.queryRecord(docClient, read_params, callback);
@@ -193,7 +193,7 @@ exports.getContentDisclaimers = function (request, callback) {
                     ":disclaimer_status": request.data.disclaimer_status,
                     ":common_id": constant.constValues.common_id, 
                 },
-                ProjectionExpression: ["disclaimer_id", "disclaimer_label"], 
+                ProjectionExpression: ["disclaimer_id", "disclaimer_label","updated_ts"], 
             }
             console.log("REQUEST : ", read_params);
             
@@ -363,7 +363,7 @@ exports.getQuestionSources = function (request, callback) {
                     ":source_status": request.data.source_status,
                     ":common_id": constant.constValues.common_id, 
                 },
-                ProjectionExpression: ["source_id", "source_name"], 
+                ProjectionExpression: ["source_id", "source_name","updated_ts"], 
             }
             console.log("REQUEST : ", read_params);
             
@@ -531,7 +531,7 @@ exports.getCognitiveSkills = function (request, callback) {
                     ":cognitive_status": request.data.cognitive_status,
                     ":common_id": constant.constValues.common_id, 
                 },
-                ProjectionExpression: ["cognitive_id", "cognitive_name"], 
+                ProjectionExpression: ["cognitive_id", "cognitive_name","updated_ts"], 
             }
             console.log("REQUEST : ", read_params);
             

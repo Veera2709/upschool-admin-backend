@@ -140,6 +140,9 @@ exports.fetchUnitsBasedonStatus = function (request, callback) {
             console.log(fetch_all_unit_err);
             callback(fetch_all_unit_err, fetch_all_unit_response);
         } else {
+            fetch_all_unit_response.Items.sort((a, b) => {
+                return new Date(b.unit_updated_ts) - new Date(a.unit_updated_ts);
+            });
             console.log("Fetch All Units Successfully");
             // callback(0, 200);
             callback(0, fetch_all_unit_response);

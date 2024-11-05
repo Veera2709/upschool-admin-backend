@@ -36,6 +36,9 @@ exports.getGoupDataByItsStatusTypes = function (request, callback) {
             console.log(groupData_err);
             callback(groupData_err, groupData_res);
         } else {
+            groupData_res.Items.sort((a, b) => {
+                return new Date(b.updated_ts) - new Date(a.updated_ts);
+            });
             groupData_res.Items.map(e => {
                 e.questions_count = e.group_question_id.length; 
             })
