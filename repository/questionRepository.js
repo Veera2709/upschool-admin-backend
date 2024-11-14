@@ -20,7 +20,8 @@ exports.fetchPreorPostQuestionsBasedOnStatus = function (request, callback) {
                 TableName: TABLE_NAMES.upschool_question_table,
                 IndexName: indexName.Indexes.common_id_index,
                 KeyConditionExpression: "common_id = :common_id",
-                FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND appears_in = :appears_in",
+                // FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND appears_in = :appears_in",
+                FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND contains(appears_in, :appears_in)",
                 ExpressionAttributeValues: {
                     ":common_id": constant.constValues.common_id,
                     ":question_status": request.data.question_status,
@@ -49,7 +50,8 @@ exports.fetchworksheetOrTestQuestionsBasedOnStatus = function (request, callback
                 TableName: TABLE_NAMES.upschool_question_table,
                 IndexName: indexName.Indexes.common_id_index,
                 KeyConditionExpression: "common_id = :common_id",
-                FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND appears_in = :appears_in",
+                // FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND appears_in = :appears_in",
+                FilterExpression: "question_status = :question_status AND question_active_status = :question_active_status AND contains(appears_in, :appears_in)",
                 ExpressionAttributeValues: {
                     ":common_id": constant.constValues.common_id,
                     ":question_status": request.data.question_status,
@@ -91,50 +93,99 @@ exports.fetchAllQuestionsBasedonStatus = function (request, callback) {
         }
     });
 }
+// exports.insertnewQuestion = function (request, callback) {
+
+//     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
+//         if (DBErr) {
+//             console.log("Question Data Database Error");
+//             console.log(DBErr);
+//             callback(500, constant.messages.DATABASE_ERROR)
+//         } else {
+
+//             let docClient = dynamoDBCall;
+
+//             let insert_standard_params = {
+//                 TableName: TABLE_NAMES.upschool_question_table,
+               
+//                 Item: {
+//                     "question_id": helper.getRandomString(), 
+//                     "question_type": request.data.question_type, 
+//                     "question_voice_note": request.data.question_voice_note, 
+//                     "question_content": request.data.question_content,
+//                     "answers_of_question": request.data.answers_of_question,
+//                     "question_status": request.data.question_status,
+//                     "show_math_keyboard": request.data.show_math_keyboard,
+//                     "question_disclaimer": request.data.question_disclaimer,
+//                     "display_answer": request.data.display_answer,
+//                     "appears_in": request.data.appears_in,
+//                     "marks": request.data.marks,
+//                     "question_source": request.data.question_source,
+//                     "cognitive_skill": request.data.cognitive_skill,
+//                     "answer_explanation": request.data.answer_explanation,
+//                     "question_label" : request.data.question_label.trim(),
+//                     "lc_question_label" : request.data.question_label.toLowerCase().replace(/ /g,''),
+//                     "question_category" : request.data.question_category,
+//                     "difficulty_level" : request.data.difficulty_level,
+//                     "question_active_status": 'Active',
+//                     "common_id": constant.constValues.common_id,                    
+//                     "created_ts": helper.getCurrentTimestamp(), 
+//                     "updated_ts": helper.getCurrentTimestamp(), 
+//                 }
+//             }
+
+//             DATABASE_TABLE.putRecord(docClient, insert_standard_params, callback);
+//         }
+//     });
+// }
+
 exports.insertnewQuestion = function (request, callback) {
 
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
         if (DBErr) {
             console.log("Question Data Database Error");
             console.log(DBErr);
-            callback(500, constant.messages.DATABASE_ERROR)
+            callback(500, constant.messages.DATABASE_ERROR);
         } else {
 
             let docClient = dynamoDBCall;
 
+            let appearsInValue = Array.isArray(request.data.appears_in)
+                ? request.data.appears_in
+                : [request.data.appears_in];
+
             let insert_standard_params = {
                 TableName: TABLE_NAMES.upschool_question_table,
-               
                 Item: {
-                    "question_id": helper.getRandomString(), 
-                    "question_type": request.data.question_type, 
-                    "question_voice_note": request.data.question_voice_note, 
+                    "question_id": helper.getRandomString(),
+                    "question_type": request.data.question_type,
+                    "question_voice_note": request.data.question_voice_note,
                     "question_content": request.data.question_content,
                     "answers_of_question": request.data.answers_of_question,
                     "question_status": request.data.question_status,
                     "show_math_keyboard": request.data.show_math_keyboard,
                     "question_disclaimer": request.data.question_disclaimer,
                     "display_answer": request.data.display_answer,
-                    "appears_in": request.data.appears_in,
+                    "appears_in": appearsInValue, 
                     "marks": request.data.marks,
                     "question_source": request.data.question_source,
                     "cognitive_skill": request.data.cognitive_skill,
                     "answer_explanation": request.data.answer_explanation,
-                    "question_label" : request.data.question_label.trim(),
-                    "lc_question_label" : request.data.question_label.toLowerCase().replace(/ /g,''),
-                    "question_category" : request.data.question_category,
-                    "difficulty_level" : request.data.difficulty_level,
+                    "question_label": request.data.question_label.trim(),
+                    "lc_question_label": request.data.question_label.toLowerCase().replace(/ /g, ''),
+                    "question_category": request.data.question_category,
+                    "difficulty_level": request.data.difficulty_level,
                     "question_active_status": 'Active',
-                    "common_id": constant.constValues.common_id,                    
-                    "created_ts": helper.getCurrentTimestamp(), 
-                    "updated_ts": helper.getCurrentTimestamp(), 
+                    "common_id": constant.constValues.common_id,
+                    "created_ts": helper.getCurrentTimestamp(),
+                    "updated_ts": helper.getCurrentTimestamp(),
                 }
-            }
+            };
 
             DATABASE_TABLE.putRecord(docClient, insert_standard_params, callback);
         }
     });
-}
+};
+
 
 exports.fetchQuestionById = function (request, callback) {
 
@@ -160,42 +211,90 @@ exports.fetchQuestionById = function (request, callback) {
     });
 }
 
+// exports.editQuestion = function (request, callback) {
+
+//     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
+//         if (DBErr) {
+//             console.log("Question Data Database Error");
+//             console.log(DBErr);
+//             callback(500, constant.messages.DATABASE_ERROR)
+//         } else {
+
+//             let docClient = dynamoDBCall;            
+
+//             let update_params = {
+//                 TableName: TABLE_NAMES.upschool_question_table,
+//                 Key: {
+//                     "question_id": request.data.question_id
+//                 }, 
+              
+//                 UpdateExpression: "set question_type = :question_type, question_voice_note = :question_voice_note, question_content = :question_content, answers_of_question = :answers_of_question, question_status = :question_status, updated_ts = :updated_ts, show_math_keyboard = :show_math_keyboard, question_disclaimer = :question_disclaimer, question_label = :question_label, lc_question_label = :lc_question_label, question_category = :question_category, display_answer = :display_answer, appears_in = :appears_in, marks = :marks, question_source = :question_source, cognitive_skill = :cognitive_skill, answer_explanation = :answer_explanation, difficulty_level = :difficulty_level",
+//                 ExpressionAttributeValues: {
+//                     ":question_type": request.data.question_type, 
+//                     ":question_voice_note": request.data.question_voice_note, 
+//                     ":question_content": request.data.question_content, 
+//                     ":answers_of_question": request.data.answers_of_question,
+//                     ":question_status": request.data.question_status,
+//                     ":show_math_keyboard": request.data.show_math_keyboard,
+//                     ":question_disclaimer": request.data.question_disclaimer,
+//                     ":question_label" : request.data.question_label.trim(),
+//                     ":lc_question_label" : request.data.question_label.toLowerCase().replace(/ /g,''),
+//                     ":question_category" : request.data.question_category,
+//                     ":display_answer" : request.data.display_answer,
+//                     ":appears_in" : request.data.appears_in,
+//                     ":marks" : request.data.marks,
+//                     ":question_source" : request.data.question_source,
+//                     ":cognitive_skill" : request.data.cognitive_skill,
+//                     ":answer_explanation" : request.data.answer_explanation,
+//                     ":difficulty_level" : request.data.difficulty_level,
+//                     ":updated_ts": helper.getCurrentTimestamp(),
+//                 },
+//             };
+
+//             DATABASE_TABLE.updateRecord(docClient, update_params, callback);
+//         }
+//     });
+// }
+
 exports.editQuestion = function (request, callback) {
 
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
         if (DBErr) {
             console.log("Question Data Database Error");
             console.log(DBErr);
-            callback(500, constant.messages.DATABASE_ERROR)
+            callback(500, constant.messages.DATABASE_ERROR);
         } else {
 
-            let docClient = dynamoDBCall;            
+            let docClient = dynamoDBCall;
+
+            let appearsInValue = Array.isArray(request.data.appears_in)
+                ? request.data.appears_in
+                : [request.data.appears_in];
 
             let update_params = {
                 TableName: TABLE_NAMES.upschool_question_table,
                 Key: {
                     "question_id": request.data.question_id
-                }, 
-              
+                },
                 UpdateExpression: "set question_type = :question_type, question_voice_note = :question_voice_note, question_content = :question_content, answers_of_question = :answers_of_question, question_status = :question_status, updated_ts = :updated_ts, show_math_keyboard = :show_math_keyboard, question_disclaimer = :question_disclaimer, question_label = :question_label, lc_question_label = :lc_question_label, question_category = :question_category, display_answer = :display_answer, appears_in = :appears_in, marks = :marks, question_source = :question_source, cognitive_skill = :cognitive_skill, answer_explanation = :answer_explanation, difficulty_level = :difficulty_level",
                 ExpressionAttributeValues: {
-                    ":question_type": request.data.question_type, 
-                    ":question_voice_note": request.data.question_voice_note, 
-                    ":question_content": request.data.question_content, 
+                    ":question_type": request.data.question_type,
+                    ":question_voice_note": request.data.question_voice_note,
+                    ":question_content": request.data.question_content,
                     ":answers_of_question": request.data.answers_of_question,
                     ":question_status": request.data.question_status,
                     ":show_math_keyboard": request.data.show_math_keyboard,
                     ":question_disclaimer": request.data.question_disclaimer,
-                    ":question_label" : request.data.question_label.trim(),
-                    ":lc_question_label" : request.data.question_label.toLowerCase().replace(/ /g,''),
-                    ":question_category" : request.data.question_category,
-                    ":display_answer" : request.data.display_answer,
-                    ":appears_in" : request.data.appears_in,
-                    ":marks" : request.data.marks,
-                    ":question_source" : request.data.question_source,
-                    ":cognitive_skill" : request.data.cognitive_skill,
-                    ":answer_explanation" : request.data.answer_explanation,
-                    ":difficulty_level" : request.data.difficulty_level,
+                    ":question_label": request.data.question_label.trim(),
+                    ":lc_question_label": request.data.question_label.toLowerCase().replace(/ /g, ''),
+                    ":question_category": request.data.question_category,
+                    ":display_answer": request.data.display_answer,
+                    ":appears_in": appearsInValue,
+                    ":marks": request.data.marks,
+                    ":question_source": request.data.question_source,
+                    ":cognitive_skill": request.data.cognitive_skill,
+                    ":answer_explanation": request.data.answer_explanation,
+                    ":difficulty_level": request.data.difficulty_level,
                     ":updated_ts": helper.getCurrentTimestamp(),
                 },
             };
@@ -203,7 +302,8 @@ exports.editQuestion = function (request, callback) {
             DATABASE_TABLE.updateRecord(docClient, update_params, callback);
         }
     });
-}
+};
+
 
 exports.toggleQuestionStatus = function (request, callback) {
 

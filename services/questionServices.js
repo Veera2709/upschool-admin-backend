@@ -82,43 +82,38 @@ exports.addNewQuestion = async function (request, callback) {
 }
 
 exports.getAllQuestionsData = function (request, callback) {    
-    if (request.data.questions_type === "preOrPost") {
+    if(request.data.questions_type === "preOrPost"){
         questionRepository.fetchPreorPostQuestionsBasedOnStatus(request, function (fetch_pre_and_post_err, fetch_pre_and_post_res) {
             if (fetch_pre_and_post_err) {
                 console.log(fetch_pre_and_post_err);
                 callback(fetch_pre_and_post_err, fetch_pre_and_post_res);
             } else {
-                callback(null, fetch_pre_and_post_res);
+                callback(fetch_pre_and_post_err, fetch_pre_and_post_res);
             }
-        });
-    } else if (request.data.questions_type === "worksheetOrTest") {
+        })
+    }else if(request.data.questions_type === "worksheetOrTest"){
         questionRepository.fetchworksheetOrTestQuestionsBasedOnStatus(request, function (fetch_worksheet_and_test_err, fetch_worksheet_and_test_res) {
             if (fetch_worksheet_and_test_err) {
                 console.log(fetch_worksheet_and_test_err);
                 callback(fetch_worksheet_and_test_err, fetch_worksheet_and_test_res);
             } else {
-                callback(null, fetch_worksheet_and_test_res);
+                callback(fetch_worksheet_and_test_err, fetch_worksheet_and_test_res);
             }
-        });
-    } else if (request.data.questions_type === "All") { 
-        questionRepository.fetchAllQuestionsBasedonStatus(request, function (fetch_all_err, fetch_all_res) { 
-            if (fetch_all_err) {
-                console.log(fetch_all_err);
-                callback(fetch_all_err, fetch_all_res);
+        })
+    }else if(request.data.questions_type === "All"){ 
+        questionRepository.fetchAllQuestionsBasedonStatus(request, function (fetch_worksheet_and_test_err, fetch_worksheet_and_test_res) { 
+            if (fetch_worksheet_and_test_err) {
+                console.log(fetch_worksheet_and_test_err);
+                callback(fetch_worksheet_and_test_err, fetch_worksheet_and_test_res);
             } else {
-                // Sort by updated_ts in descending order
-                fetch_all_res.Items.sort((a, b) => {
-                    return new Date(b.updated_ts) - new Date(a.updated_ts);
-                });
-
-                callback(null, fetch_all_res);
+                callback(fetch_worksheet_and_test_err, fetch_worksheet_and_test_res);
             }
-        });
-    } else {
+        })
+    }else{
         callback(400, constant.messages.INVALID_REQUEST_FORMAT); 
     }
+  
 }
-
 
 exports.getIndividualQuestionData = function (request, callback) {    
     questionRepository.fetchQuestionById(request, async function (fetch_question_err, fetch_question_res) {
@@ -253,10 +248,12 @@ exports.deleteRestoreQuestion = function (request, callback) {
             {
                 if(fetch_question_res.Items[0].question_status === "Publish" && request.data.question_active_status === "Archived") // more question status can be added
                 {
-                    if(fetch_question_res.Items[0].appears_in && fetch_question_res.Items[0].appears_in === constant.questionKeys.preOrPost)
-                    {
-                        /** ARCHIVE PREPOST QUESTION **/
-                        /** FETCH ALL ACTIVE GROUP **/
+                    if (fetch_question_res.Items[0].appears_in) {
+                        
+                    // if(fetch_question_res.Items[0].appears_in && fetch_question_res.Items[0].appears_in === constant.questionKeys.preOrPost)
+                    // {
+                        if ((Array.isArray(fetch_question_res.Items[0].appears_in) && fetch_question_res.Items[0].appears_in.includes(constant.questionKeys.preOrPost)) || fetch_question_res.Items[0].appears_in === constant.questionKeys.preOrPost) {
+ 
                         request.data.group_status = "Active"
                         groupRepository.fetchGroupBasedOnStatus(request, function (groupData_err, groupData_res) {
                             if (groupData_err) {
@@ -351,7 +348,8 @@ exports.deleteRestoreQuestion = function (request, callback) {
                             })
                             /** END FETCH ALL CONCEPT **/
                         /** END ARCHIVE WORKSHEET QUESTION **/
-                    }                    
+                    } 
+                }                   
                 }
                 else
                 {
