@@ -6,6 +6,7 @@ const helper = require('../helper/helper');
 const e = require("express");
 
 exports.addNewGroup = function (request, callback) {    
+    console.log("--",request.data);
     groupRepository.fetchGroupByName(request, async function (fetchGroup_err, fetchGroup_response) {
         if (fetchGroup_err) {
             console.log(fetchGroup_err);
