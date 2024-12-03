@@ -1,4 +1,5 @@
 const groupRepository = require("../repository/groupRepository");
+const userRepository = require("../repository/userRepository");
 const conceptRepository = require("../repository/conceptRepository");
 const commonServices = require("../services/commonServices");
 const constant = require('../constants/constant');
@@ -306,6 +307,90 @@ exports.multiGroupsToggleStatus = async function (request, callback) {
 
 }
 
+const sendBulkUploadResponse = (bulkError, reqToken, callback) => {
+    console.log({ reqToken })
+    let decode_token = helper.decodeJwtToken(reqToken);
+    let getMailReq = { user_id: decode_token.user_role === 'admin' || Array.isArray(decode_token.user_role) ? decode_token.user_id : decode_token.teacher_id };
+
+    decode_token.user_role === 'admin' || Array.isArray(decode_token.user_role) ? userRepository.fetchUserDataByUserId(getMailReq, function (fetch_user_data_err, fetch_user_data_response) {
+        if (fetch_user_data_err) {
+            console.log(fetch_user_data_err);
+            callback(fetch_user_data_err, 0);
+        } else {
+            if (fetch_user_data_response.Items.length > 0) {
+                console.log("USER EMAIL : ", fetch_user_data_response.Items[0].user_email);
+
+                let mailPayload = {
+                    "bulkResponse": JSON.stringify(bulkError),
+                    "toMail": fetch_user_data_response.Items[0].user_email,
+                    "subject": 'User Upload Response',
+                    "mailFor": "userBulkUpload",
+                };
+
+                /** PUBLISH SNS **/
+                let mailParams = {
+                    Message: JSON.stringify(mailPayload),
+                    TopicArn: process.env.SEND_OTP_ARN
+                };
+
+                dynamoDbCon.sns.publish(mailParams, function (err, data) {
+                    if (err) {
+                        console.log("SNS PUBLISH ERROR : BULK UPLOAD");
+                        console.log(err, err.stack);
+                        callback(err, data);
+                    }
+                    else {
+                        console.log("SNS PUBLISH SUCCESS : BULK UPLOAD");
+                        callback(0, 1);
+                    }
+                });
+                /** END PUBLISH SNS **/
+            } else {
+                console.log("ERROR : FETCHING USER");
+                callback(1, 0);
+            }
+        }
+    }) : userRepository.fetchAdminDataById(getMailReq, function (fetch_user_data_err, fetch_user_data_response) {
+        if (fetch_user_data_err) {
+            console.log(fetch_user_data_err);
+            callback(fetch_user_data_err, 0);
+        } else {
+            if (fetch_user_data_response.Items.length > 0) {
+                console.log("USER EMAIL : ", fetch_user_data_response.Items[0].user_email);
+
+                let mailPayload = {
+                    "bulkResponse": JSON.stringify(bulkError),
+                    "toMail": fetch_user_data_response.Items[0].user_email,
+                    "subject": 'User Upload Response',
+                    "mailFor": "userBulkUpload",
+                };
+
+                /** PUBLISH SNS **/
+                let mailParams = {
+                    Message: JSON.stringify(mailPayload),
+                    TopicArn: process.env.SEND_OTP_ARN
+                };
+
+                dynamoDbCon.sns.publish(mailParams, function (err, data) {
+                    if (err) {
+                        console.log("SNS PUBLISH ERROR : BULK UPLOAD");
+                        console.log(err, err.stack);
+                        callback(err, data);
+                    }
+                    else {
+                        console.log("SNS PUBLISH SUCCESS : BULK UPLOAD");
+                        callback(0, 1);
+                    }
+                });
+                /** END PUBLISH SNS **/
+            } else {
+                console.log("ERROR : FETCHING USER");
+                callback(1, 0);
+            }
+        }
+    })
+}
+
 exports.bulkGroupsUpload = async (request, reqToken, callback) => {
     let Key = request.data.excelFileName;
     // let Key = "temp/2fa103b3-616e-59df-a54b-ce577e6e0b34_a8cab7b8-ca8f-5c4b-bb29-e258b591a67d.xlsx";
@@ -339,26 +424,49 @@ exports.bulkGroupsUpload = async (request, reqToken, callback) => {
                     if (j < workbook[i].data.length) {
                         if (workbook[i].data[j].length > 0) {
                             request.data.group_name = workbook[i].data[j][2]
-                            groupRepository.fetchGroupByName(request, async function (fetchGroup_err, fetchGroup_response) {
-                                if (fetchGroup_err) {
-                                    console.log(fetchGroup_err);
-                                    callback(fetchGroup_err, fetchGroup_response);
-                                } else {
-                                    if (fetchGroup_response.Items.length > 0) {
-                                        //craete error array and send mail as to why it is not craeated
-                                        console.log(request.data.group_name, "", constant.messages.GROUP_NAME_ALREADY_EXIST);
-                                        j++;
-                                        rowLoop(j)
+                            console.log(workbook[i].data[j][2])
+                            if (workbook[i].data[j][2]) {
+                                groupRepository.fetchGroupByName(request, async function (fetchGroup_err, fetchGroup_response) {
+                                    if (fetchGroup_err) {
+                                        console.log(fetchGroup_err);
+                                        callback(fetchGroup_err, fetchGroup_response);
+                                    } else {
+                                        if (fetchGroup_response.Items.length > 0) {
+                                            //craete error array and send mail as to why it is not craeated
+                                            // console.log(request.data.group_name, "", constant.messages.GROUP_NAME_ALREADY_EXIST);
+                                            errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: workbook[i].data[j][2].toString() + " " + constant.messages.GROUP_NAME_ALREADY_EXIST })
+                                            j++;
+                                            rowLoop(j)
+                                        }
+                                        else if (fetchGroup_response.Items.length === 0) {
+                                            //create array for bulk insert
+                                            console.log(request.data.group_name, "needs to be created")
+                                            groupsData.push({
+                                                group_id: helper.getRandomString(),
+                                                common_id: constant.constValues.common_id,
+                                                created_ts: helper.getCurrentTimestamp(),
+                                                display_name: workbook[i].data[j][0],
+                                                group_description: workbook[i].data[j][1],
+                                                group_name: workbook[i].data[j][2],
+                                                group_question_id: [],
+                                                group_related_digicard: [],
+                                                group_status: workbook[i].data[j][3],
+                                                group_type: workbook[i].data[j][4],
+                                                lc_group_name: workbook[i].data[j][2].toLowerCase().replace(/ /g, ''),
+                                                question_duration: workbook[i].data[j][5],
+                                                updated_ts: helper.getCurrentTimestamp()
+                                            })
+                                            j++;
+                                            rowLoop(j)
+                                        }
                                     }
-                                    else if (fetchGroup_response.Items.length === 0) {
-                                        //create array for bulk insert
-                                        console.log(request.data.group_name, "needs to be created")
-                                        // groupsData.push()
-                                        j++;
-                                        rowLoop(j)
-                                    }
-                                }
-                            })
+                                })
+                            }
+                            else {
+                                errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: "group name undefined" })
+                                j++;
+                                rowLoop(j)
+                            }
 
                         }
                         else {
@@ -378,8 +486,35 @@ exports.bulkGroupsUpload = async (request, reqToken, callback) => {
 
             }
             else {
-                console.log("SHEET END");
-                console.log("ERRORs array has to be sent now ");
+                console.log("SHEET END", groupsData);
+                console.log("ERRORs array has to be sent now ", errorRes);
+
+                groupRepository.insertManyCases(groupsData, function (insert_many_parents_err, insert_many_parents_response) {
+                    if (insert_many_parents_err) {
+                        console.log("ERROR : Insert groups Data");
+                        console.log(insert_many_parents_err);
+                    } else {
+                        console.log("Groups Data Inserted Successfully");
+                        // errorRes = errorRes.filter((NA) => NA !== "N.A.");
+
+                        /** SENDING RESPONSE **/
+                        if (errorRes.length > 0) {
+                            sendBulkUploadResponse(errorRes, reqToken, (mailErr, mailRes) => {
+                                if (mailErr) {
+                                    console.log("ERROR : Sending mail for bulkupload!");
+                                    callback(400, "ERROR : SENDING MAIL");
+                                }
+                                else {
+                                    console.log("BULK UPLOAD RESPONSE SENT!");
+                                    callback(0, errorRes);
+                                }
+                            })
+                        }
+                        else {
+                            callback(0, errorRes);
+                        }
+                    }
+                })
             }
         }
         worksheetLoop(0)

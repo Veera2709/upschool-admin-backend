@@ -26,7 +26,7 @@ exports.fetchGroupBasedOnTypes = function (request, callback) {
                     ":group_status": request.data.group_status,
                     ":group_type": request.data.group_type,
                 },
-                ProjectionExpression: ["group_id", "group_name", "group_type", "updated_ts", "group_levels", "group_status","group_question_id","group_description", "display_name"],
+                ProjectionExpression: ["group_id", "group_name", "group_type", "updated_ts", "group_status","group_question_id","group_description", "display_name"],
             }
 
             DATABASE_TABLE.queryRecord(docClient, read_params, callback);
@@ -109,7 +109,6 @@ exports.insertnewGroup = function (request, callback) {
                     "group_type": request.data.group_type,
                     "group_status": 'Active',
                     "display_name": request.data.display_name,
-                    "group_levels": request.data.group_levels,
                     "group_question_id": request.data.group_question_id,
                     "group_related_digicard": request.data.group_related_digicard,
                     "group_description":request.data.group_description,                    
@@ -191,12 +190,11 @@ exports.editGroup = function (request, callback) {
                 Key: {
                     "group_id": request.data.group_id
                 },
-                UpdateExpression: "set group_name = :group_name, lc_group_name = :lc_group_name, group_type = :group_type, group_levels = :group_levels, group_question_id = :group_question_id, group_related_digicard = :group_related_digicard,group_description = :group_description,question_duration = :question_duration, display_name = :display_name, updated_ts = :updated_ts",
+                UpdateExpression: "set group_name = :group_name, lc_group_name = :lc_group_name, group_type = :group_type, group_question_id = :group_question_id, group_related_digicard = :group_related_digicard,group_description = :group_description,question_duration = :question_duration, display_name = :display_name, updated_ts = :updated_ts",
                 ExpressionAttributeValues: {
                     ":group_name": request.data.group_name,
                     ":lc_group_name": request.data.group_name.toLowerCase().replace(/ /g,''), 
                     ":group_type": request.data.group_type,
-                    ":group_levels": request.data.group_levels,
                     ":group_question_id": request.data.group_question_id,
                     ":group_description": request.data.group_description,
                     ":question_duration": request.data.question_duration,
@@ -304,6 +302,14 @@ exports.fetchGroupsData = function (request, callback) {
         }
     });
 }
+// Utility function to split array into chunks
+function chunkArray(arr, size) {
+    const result = [];
+    for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+    }
+    return result;
+}
 
 exports.insertManyCases = function (final_data, callback) {
 
@@ -332,20 +338,19 @@ exports.insertManyCases = function (final_data, callback) {
                         tableName = TABLE_NAMES.upschool_group_table;
                               
 
-                        const batchPromises = await currentBatches.map(async (batch) => {
+                        const batchPromises = currentBatches.map(async (batch) => {
                             // Make BatchWriteItem request for each batch of items
-
+                            console.log(batch);
                             const params = {
-                                RequestItems: {
-                                }
+                                RequestItems: {}
                             };
 
                             params.RequestItems[tableName] = await batch.map((item) => ({
                                 PutRequest: {
                                     Item: item
                                 }
-                            }))
-
+                            }));
+                            console.log(params.RequestItems.tableName);
                             return await docClient.batchWrite(params).promise();
                         });
 
