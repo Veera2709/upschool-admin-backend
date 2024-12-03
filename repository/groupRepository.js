@@ -62,7 +62,7 @@ exports.fetchGroupBasedOnStatus = function (request, callback) {
 }
 
 exports.fetchGroupByName = function (request, callback) {
-
+    console.log(request)
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
         if (DBErr) {
             console.log("Group Data Database Error");
@@ -303,4 +303,68 @@ exports.fetchGroupsData = function (request, callback) {
 
         }
     });
+}
+
+exports.insertManyCases = function (final_data, callback) {
+
+    if (final_data.length > 0) {
+        dynamoDbCon.getDB(async function (DBErr, dynamoDBCall) {
+            if (DBErr) {
+                console.log("Cases Data Database Error");
+                console.log(DBErr);
+                callback(500, constant.messages.USER_DATA_DATABASE_ERROR);
+            } else {
+
+                let docClient = dynamoDBCall;
+
+                const concurrencyLevel = 5; // Choose the number of parallel threads/processes
+
+                const batches = chunkArray(final_data, 25); // Split items into batches of 25
+                const promises = [];
+
+                async function batchLoop(i) {
+                    if (i < batches.length) {
+
+                        const currentBatches = batches.slice(i, i + concurrencyLevel);
+                        let tableName = '';
+
+                        
+                        tableName = TABLE_NAMES.upschool_group_table;
+                              
+
+                        const batchPromises = await currentBatches.map(async (batch) => {
+                            // Make BatchWriteItem request for each batch of items
+
+                            const params = {
+                                RequestItems: {
+                                }
+                            };
+
+                            params.RequestItems[tableName] = await batch.map((item) => ({
+                                PutRequest: {
+                                    Item: item
+                                }
+                            }))
+
+                            return await docClient.batchWrite(params).promise();
+                        });
+
+                        promises.push(...batchPromises);
+
+                        i += concurrencyLevel;
+                        batchLoop(i);
+                    } else {
+                        await Promise.all(promises);
+                        console.log('All items inserted.');
+                        callback(0, 200);
+
+                    }
+                }
+                batchLoop(0);
+            }
+        });
+    }
+    else {
+        callback(0, 200);
+    }
 }

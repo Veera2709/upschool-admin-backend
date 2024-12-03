@@ -85,3 +85,17 @@ exports.bulkToggleGroupsStatus = (req, res, next) => {
         }
     });
 };
+
+exports.bulkGroupsUpload = (req, res, next) => {
+    console.log("Bulk Toggle group Status");
+    console.log(req.body);
+    let request = req.body;
+    groupServices.bulkGroupsUpload(request, function (bulkToggle_err, bulkToggle_response) {
+        if (bulkToggle_err) {
+            res.status(bulkToggle_err).json(bulkToggle_response);
+        } else {
+            console.log("Bulk group Update !");
+            res.json(bulkToggle_response);
+        }
+    });
+};
