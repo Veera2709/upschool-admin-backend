@@ -260,7 +260,7 @@ exports.validateOtpForLogin = function (request, callback) {
                                     callback(update_jwt_err, update_jwt_response);
                                 } else {
                                     console.log("Jwt Token Updated Successfully");
-                                    callback(0, [{ jwt: jwtToken, isFirstTimeLogin: firstLogin }]);
+                                    callback(0, [{ jwt: jwtToken, isFirstTimeLogin: firstLogin , user_role : fetch_user_data_response.Items[0].user_role}]);
                                 }
                             })
                         }
