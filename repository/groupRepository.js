@@ -26,7 +26,7 @@ exports.fetchGroupBasedOnTypes = function (request, callback) {
                     ":group_status": request.data.group_status,
                     ":group_type": request.data.group_type,
                 },
-                ProjectionExpression: ["group_id", "group_name", "group_type", "updated_ts", "group_levels", "group_status","group_question_id","group_description", "display_name"],
+                ProjectionExpression: ["group_id", "group_name", "group_type", "updated_ts", "group_status","group_question_id","group_description", "display_name"],
             }
 
             DATABASE_TABLE.queryRecord(docClient, read_params, callback);
@@ -62,7 +62,7 @@ exports.fetchGroupBasedOnStatus = function (request, callback) {
 }
 
 exports.fetchGroupByName = function (request, callback) {
-
+    console.log(request)
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
         if (DBErr) {
             console.log("Group Data Database Error");
@@ -109,7 +109,6 @@ exports.insertnewGroup = function (request, callback) {
                     "group_type": request.data.group_type,
                     "group_status": 'Active',
                     "display_name": request.data.display_name,
-                    "group_levels": request.data.group_levels,
                     "group_question_id": request.data.group_question_id,
                     "group_related_digicard": request.data.group_related_digicard,
                     "group_description":request.data.group_description,                    
@@ -191,12 +190,11 @@ exports.editGroup = function (request, callback) {
                 Key: {
                     "group_id": request.data.group_id
                 },
-                UpdateExpression: "set group_name = :group_name, lc_group_name = :lc_group_name, group_type = :group_type, group_levels = :group_levels, group_question_id = :group_question_id, group_related_digicard = :group_related_digicard,group_description = :group_description,question_duration = :question_duration, display_name = :display_name, updated_ts = :updated_ts",
+                UpdateExpression: "set group_name = :group_name, lc_group_name = :lc_group_name, group_type = :group_type, group_question_id = :group_question_id, group_related_digicard = :group_related_digicard,group_description = :group_description,question_duration = :question_duration, display_name = :display_name, updated_ts = :updated_ts",
                 ExpressionAttributeValues: {
                     ":group_name": request.data.group_name,
                     ":lc_group_name": request.data.group_name.toLowerCase().replace(/ /g,''), 
                     ":group_type": request.data.group_type,
-                    ":group_levels": request.data.group_levels,
                     ":group_question_id": request.data.group_question_id,
                     ":group_description": request.data.group_description,
                     ":question_duration": request.data.question_duration,
@@ -303,4 +301,75 @@ exports.fetchGroupsData = function (request, callback) {
 
         }
     });
+}
+// Utility function to split array into chunks
+function chunkArray(arr, size) {
+    const result = [];
+    for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+    }
+    return result;
+}
+
+exports.insertManyCases = function (final_data, callback) {
+
+    if (final_data.length > 0) {
+        dynamoDbCon.getDB(async function (DBErr, dynamoDBCall) {
+            if (DBErr) {
+                console.log("Cases Data Database Error");
+                console.log(DBErr);
+                callback(500, constant.messages.USER_DATA_DATABASE_ERROR);
+            } else {
+
+                let docClient = dynamoDBCall;
+
+                const concurrencyLevel = 5; // Choose the number of parallel threads/processes
+
+                const batches = chunkArray(final_data, 25); // Split items into batches of 25
+                const promises = [];
+
+                async function batchLoop(i) {
+                    if (i < batches.length) {
+
+                        const currentBatches = batches.slice(i, i + concurrencyLevel);
+                        let tableName = '';
+
+                        
+                        tableName = TABLE_NAMES.upschool_group_table;
+                              
+
+                        const batchPromises = currentBatches.map(async (batch) => {
+                            // Make BatchWriteItem request for each batch of items
+                            console.log(batch);
+                            const params = {
+                                RequestItems: {}
+                            };
+
+                            params.RequestItems[tableName] = await batch.map((item) => ({
+                                PutRequest: {
+                                    Item: item
+                                }
+                            }));
+                            console.log(params.RequestItems.tableName);
+                            return await docClient.batchWrite(params).promise();
+                        });
+
+                        promises.push(...batchPromises);
+
+                        i += concurrencyLevel;
+                        batchLoop(i);
+                    } else {
+                        await Promise.all(promises);
+                        console.log('All items inserted.');
+                        callback(0, 200);
+
+                    }
+                }
+                batchLoop(0);
+            }
+        });
+    }
+    else {
+        callback(0, 200);
+    }
 }

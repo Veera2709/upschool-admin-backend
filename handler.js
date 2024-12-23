@@ -181,6 +181,7 @@ app.post("/v1/fetchIndividualGroupData", validator.validUser, groupController.fe
 app.post("/v1/editGroup", validator.validUser, groupController.editGroup);
 app.post("/v1/fetchAllTypesOfGroups", validator.validUser, groupController.fetchAllTypesOfGroups);
 app.post("/v1/bulkToggleGroupsStatus", validator.validUser, groupController.bulkToggleGroupsStatus);
+app.post("/v1/bulkGroupsUpload", groupController.bulkGroupsUpload);
 
 // Settings - Category :
 app.post("/v1/fetchAllQuestionCategories", validator.validUser, settingsController.fetchAllQuestionCategories);
