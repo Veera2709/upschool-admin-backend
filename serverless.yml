@@ -600,3 +600,7 @@ functions:
           path: /v1/bulkGroupsUpload
           method: POST
           cors: true
+      - http:
+          path: /v1/setTestConfiguration
+          method: POST
+          cors: true
