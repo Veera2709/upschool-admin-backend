@@ -113,6 +113,7 @@ app.post("/v1/fetchClassBasedOnSchool", validator.validUser, schoolController.fe
 
 // School Settings :
 app.post("/v1/setQuizConfiguration", validator.validUser, schoolController.setQuizConfiguration);
+app.post("/v1/setTestConfiguration", validator.validUser, schoolController.setTestConfiguration);
 app.post("/v1/schoolubscriptionFeatures", validator.validUser, schoolController.schoolubscriptionFeatures);
 app.post("/v1/teacherAccess",  schoolController.teacherAccess);
 

@@ -650,6 +650,37 @@ exports.setSchoolQuizConfig = async function (request, callback) {
     })
 }
 
+exports.setSchoolTestConfig = async (request , callback) => {
+    try {
+         schoolRepository.getSchoolDetailsById(request, function (getSchoolData_err, getSchoolData_res) {
+            if (getSchoolData_err) {
+                console.log(getSchoolData_err);
+                callback(getSchoolData_err, getSchoolData_res);
+            } else {
+                if (getSchoolData_res.Items.length > 0) {
+                    schoolRepository.setTestConfig(request , function (setTestConfig_err, setTestConfig_res) {
+                        if (setTestConfig_err) {
+                            console.log(setTestConfig_err);
+                            callback(setTestConfig_err, setTestConfig_res);
+                        }
+                        else {
+                            console.log({ "setTestConfig_res":setTestConfig_res });
+                            callback(0, setTestConfig_res);
+                        }
+                    })
+                }
+                else {
+                    console.log(constant.messages.SCHOOL_DOESNOT_EXISTS);
+                    callback(400, constant.messages.SCHOOL_DOESNOT_EXISTS);
+                }
+            }
+        })
+    } catch (error) {
+        console.log(error);
+        callback(error, 0);
+    }
+}
+
 exports.setSchoolSubscription = async function (request, callback) {
     schoolRepository.getSchoolDetailsById(request, function (getSchoolData_err, getSchoolData_res) {
         if (getSchoolData_err) {
