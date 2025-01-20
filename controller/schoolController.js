@@ -154,6 +154,21 @@ exports.setQuizConfiguration = (req, res, next) => {
     });
 };
 
+exports.setTestConfiguration = (req, res, next) => {
+    console.log("Set Test Configuration!");
+    console.log(req.body);
+    let request = req.body;
+    schoolServices.setSchoolTestConfig(request, (testConfig_err, testConfig_response) => {
+        if (testConfig_err) {
+            console.error("Error in setTestConfiguration:", testConfig_err);
+            res.status(400).json({ error: testConfig_err.message || "An error occurred" });
+        } else {
+            console.log("Configured!");
+            res.json(testConfig_response);
+        }
+    });
+}
+
 exports.schoolubscriptionFeatures = (req, res, next) => {
     console.log("School Subscription Setting!");
     console.log(req.body);
