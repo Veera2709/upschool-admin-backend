@@ -397,6 +397,33 @@ exports.setPostQuizConfig = function (request, callback) {
         }
     });
 }
+
+exports.setTestConfig = function (request, callback) {  
+    console.log(request.data.test_config);
+    dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
+        if (DBErr) {
+            console.log("School Data Database Error");
+            console.log(DBErr);
+            callback(500, constant.messages.DATABASE_ERROR)
+        } else {
+            let docClient = dynamoDBCall;
+            let update_params = {
+                TableName: TABLE_NAMES.upschool_school_info_table,
+                Key: {
+                    "school_id": request.data.school_id
+                },
+                UpdateExpression: "set test_config = :test_config, updated_ts = :updated_ts",
+                ExpressionAttributeValues: {
+                    ":test_config": request.data.test_config,
+                    ":updated_ts": helper.getCurrentTimestamp(),
+                },
+            };
+            DATABASE_TABLE.updateRecord(docClient, update_params, callback);
+        }
+    });
+}
+
+
 exports.settingSubscriptionFeature = function (request, callback) {
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
         if (DBErr) {
