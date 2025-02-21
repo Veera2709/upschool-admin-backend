@@ -22,6 +22,9 @@ exports.getBluePrintsBasedonStatus = (request, callback) => {
           console.log(blueprint_err);
           callback(blueprint_err, blueprint_res);
       } else {  
+        blueprint_res.Items.sort((a, b) => {
+          return new Date(b.updated_ts) - new Date(a.updated_ts);
+        });
         callback(blueprint_err, blueprint_res.Items); 
       }
     }) 
