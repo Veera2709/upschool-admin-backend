@@ -63,7 +63,7 @@ exports.fetchBluePrintsBasedonStatus = function (request, callback) {
                 KeyConditionExpression: "common_id = :common_id",
                 FilterExpression: filterExpression,
                 ExpressionAttributeValues: expressionAttributeValues,
-                ProjectionExpression: ["blueprint_id", "blueprint_name", "description", "test_duration"]
+                ProjectionExpression: ["blueprint_id", "blueprint_name", "description", "test_duration","updated_ts"]
             };
 
             DATABASE_TABLE.queryRecord(docClient, read_params, callback);
