@@ -2,7 +2,7 @@ const uuid = require("uuidv4");
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const jwt_decode = require('jwt-decode');
-const dynamoDbCon = require('../awsConfig');  
+const dynamoDbCon = require('../awsConfig');
 
 const excelEpoc = new Date(1900, 0, 0).getTime();
 const msDay = 86400000;
@@ -15,7 +15,7 @@ exports.getRandomString = function () {
 }
 exports.getSignedURL = async function (Key) {
 
-    console.log("getSignedURL Key : ", Key); 
+    console.log("getSignedURL Key : ", Key);
 
     let URL_EXPIRATION_SECONDS = 300;
     let s3Params = {
@@ -61,38 +61,47 @@ exports.hashingPassword = function (hashReq) {
 
 exports.change_dd_mm_yyyy = function (givenDate) {
     console.log("GIVEN DATE : ", givenDate);
-    if(givenDate && givenDate != undefined && givenDate.replace(/ /g,'') != "" && givenDate.toString().includes('-'))
-    {
+    if (givenDate && givenDate != undefined && givenDate.replace(/ /g, '') != "" && givenDate.toString().includes('-')) {
         let splitedDate = givenDate.split("-");
-        let dd_mm_yyyy = splitedDate[2]+"-"+splitedDate[1]+"-"+splitedDate[0];
+        let dd_mm_yyyy = splitedDate[2] + "-" + splitedDate[1] + "-" + splitedDate[0];
         return dd_mm_yyyy;
     }
-    else
-    {
+    else {
         return "00-00-0000";
-    }    
+    }
 }
 
 exports.checkEmpty = async function (rowVal) {
-    return (rowVal && rowVal != undefined && rowVal.toString().replace(/ /g,'') != "" && rowVal != null && rowVal != "null" && rowVal != "undefined") === true ? true : false;    
+    return (rowVal && rowVal != undefined && rowVal.toString().replace(/ /g, '') != "" && rowVal != null && rowVal != "null" && rowVal != "undefined") === true ? true : false;
 }
 
 exports.validateRows = async function (sheetName, rowVal) {
-    
-    if(sheetName === "Parents")
-    {
+
+    if (sheetName === "Parents") {
         return (await exports.checkEmpty(rowVal[0]) && await exports.checkEmpty(rowVal[1]) && await exports.checkEmpty(rowVal[2]) && await exports.checkEmpty(rowVal[3]) && await exports.checkEmpty(rowVal[4]) === true) ? true : false;
     }
-    else if(sheetName === "Teachers")
-    {
+    else if (sheetName === "Teachers") {
         return (await exports.checkEmpty(rowVal[0]) && await exports.checkEmpty(rowVal[1]) && await exports.checkEmpty(rowVal[2]) && await exports.checkEmpty(rowVal[3]) && await exports.checkEmpty(rowVal[4]) === true) ? true : false;
     }
-    else if(sheetName === "Students")
-    {
+    else if (sheetName === "Students") {
         return (await exports.checkEmpty(rowVal[0]) && await exports.checkEmpty(rowVal[1]) && await exports.checkEmpty(rowVal[2]) && await exports.checkEmpty(rowVal[3]) && await exports.checkEmpty(rowVal[4]) && await exports.checkEmpty(rowVal[5]) && await exports.checkEmpty(rowVal[6]) && await exports.checkEmpty(rowVal[7]) === true) ? true : false;
     }
-    else
-    {
+    else {
+        console.log("DEFAULT SHEET NAME");
+        return false;
+    }
+}
+
+exports.validateQuestionRows = async function (sheetName, rowVal) {
+    if (sheetName === "Objective") {
+        return (await Promise.all(rowVal.slice(0, 24).map(exports.checkEmpty))).every(val => val === true);
+    }
+    else if (sheetName === "Teachers") {
+        return (await Promise.all(rowVal.slice(0, 13).map(exports.checkEmpty))).every(val => val === true);
+    }
+    else if (sheetName === "Subjective") {
+        return (await Promise.all(rowVal.slice(0, 12).map(exports.checkEmpty))).every(val => val === true);
+    } else {
         console.log("DEFAULT SHEET NAME");
         return false;
     }
@@ -123,7 +132,7 @@ exports.PutObjectS3SigneUdrl = async function (requestFileName, folderName) {
 
     let URL_EXPIRATION_SECONDS = 300;
     let randomID = exports.getRandomString();
-    let Key = `${folderName}/${randomID}` + file_ext;    
+    let Key = `${folderName}/${randomID}` + file_ext;
 
     // Get signed URL from S3
     let s3Params = {
@@ -136,7 +145,7 @@ exports.PutObjectS3SigneUdrl = async function (requestFileName, folderName) {
 
     let uploadURL = await dynamoDbCon.s3.getSignedUrlPromise('putObject', s3Params);
 
-    return { uploadURL : uploadURL, Key : Key };
+    return { uploadURL: uploadURL, Key: Key };
 }
 
 exports.sortDataBasedOnTimestamp = function (j, data) {
@@ -176,25 +185,24 @@ exports.findDuplicatesInArrayOfObjects = function (reqArray, checkField) {
     const lookup = reqArray.reduce((a, e) => {
         a[e[checkField]] = ++a[e[checkField]] || 0;
         return a;
-      }, {});
-      
+    }, {});
+
     let duplicates = reqArray.filter(e => lookup[e[checkField]]);
-    
+
     return duplicates;
 }
 
 exports.findDuplicateObjectwithSameKeyValue = function (reqArray, checkField) {
     let duplicateValue = [];
     let seen = new Set();
-    let hasDuplicates = reqArray.some(function(currentObject) {
-    let duplicateStatus = seen.size === seen.add(currentObject[checkField[0]] + currentObject[checkField[1]]).size;
-    if(duplicateStatus === true)
-    {
-        console.log(duplicateStatus);
-        duplicateValue.push(currentObject);
-    }        
+    let hasDuplicates = reqArray.some(function (currentObject) {
+        let duplicateStatus = seen.size === seen.add(currentObject[checkField[0]] + currentObject[checkField[1]]).size;
+        if (duplicateStatus === true) {
+            console.log(duplicateStatus);
+            duplicateValue.push(currentObject);
+        }
     });
-    
+
     return duplicateValue;
 }
 
@@ -204,10 +212,10 @@ exports.getDifferenceBetweenTwoArrays = function (actualArr, checkArr, fieldChec
 
     // Get items that only occur in the left Arr,
     // using the compareFunction to determine equality.
-    const onlyInLeft = (left, right, compareFunction) => 
-    left.filter(leftValue =>
-        !right.some(rightValue => 
-        compareFunction(leftValue, rightValue)));
+    const onlyInLeft = (left, right, compareFunction) =>
+        left.filter(leftValue =>
+            !right.some(rightValue =>
+                compareFunction(leftValue, rightValue)));
 
     const onlyInA = onlyInLeft(actualArr, checkArr, isSameUser);
     // const onlyInB = onlyInLeft(checkArr, actualArr, isSameUser);
@@ -217,15 +225,15 @@ exports.getDifferenceBetweenTwoArrays = function (actualArr, checkArr, fieldChec
     return onlyInA;
 }
 
-exports.concatTwoInfo = function (infoToReplace, infoDifference) { 
+exports.concatTwoInfo = function (infoToReplace, infoDifference) {
 
     infoDifference.forEach(function (diffInfo) {
         infoToReplace.push({
-            info_id : diffInfo.info_id,
-            client_class_id : diffInfo.client_class_id,
-            section_id : diffInfo.section_id,
-            subject_id : diffInfo.subject_id,
-            info_status : "Archived"
+            info_id: diffInfo.info_id,
+            client_class_id: diffInfo.client_class_id,
+            section_id: diffInfo.section_id,
+            subject_id: diffInfo.subject_id,
+            info_status: "Archived"
         });
     });
 
@@ -411,11 +419,13 @@ exports.convertNumberToAlphabet = function (number) {
 
 exports.validateEmail = function (email) {
     // let regX = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/; 
-  let regX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    let regX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return email.match(regX);
 }
 
+exports.prePostArray = ['Pre / Post', 'Pre/Post', 'pre/post', 'pre / post'];
 
+exports.worksheetOrTestArray = ['Worksheet / Test', 'Worksheet/Test', 'worksheet/test', 'worksheet / test'];
 
 
 
