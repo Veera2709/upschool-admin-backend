@@ -156,7 +156,7 @@ const sendBulkUploadResponse = async (bulkError, reqToken, callback) => {
     })
 }
 
-exports.questionBulkUpload = async (request, reqToken, callback) => {
+exports.questionBulkUpload = async (request, callback) => {
     let Key = request.data.excelFileName;
     // let Key = "temp/2fa103b3-616e-59df-a54b-ce577e6e0b34_a8cab7b8-ca8f-5c4b-bb29-e258b591a67d.xlsx";
     let school_id = Key.split('/')[1].split('_')[0];
@@ -216,6 +216,12 @@ exports.questionBulkUpload = async (request, reqToken, callback) => {
                     }
                 });
 
+                disclaimer_response.cognitive_skills.forEach(cognitive => {
+                    if (cognitive.cognitive_name) {
+                        cognitive.cognitive_name = cognitive.cognitive_name.toUpperCase();
+                    }
+                });
+
                 let questionLabels = [];
 
                 for (let i = 0; i < workbook.length; i++) {
@@ -246,60 +252,80 @@ exports.questionBulkUpload = async (request, reqToken, callback) => {
                                             if (workbook[i].data[j].length > 5 && workbook[i].data[j]?.[0]) {
                                                 if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
-                                                        tempUserId = helper.getRandomString()
-                                                        questionsData.push({
-                                                            question_id: tempUserId,
-                                                            answers_of_question: [
-                                                                {
-                                                                    answer_type: workbook[i].data[j][8]?.toString(),
-                                                                    answer_content: workbook[i].data[j][9]?.toString(),
-                                                                    answer_display: workbook[i].data[j][10]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j][11]?.toString(),
-                                                                    answer_option: "Options",
-                                                                },
-                                                                {
-                                                                    answer_type: workbook[i].data[j][12]?.toString(),
-                                                                    answer_content: workbook[i].data[j][13]?.toString(),
-                                                                    answer_display: workbook[i].data[j][14]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j][15]?.toString(),
-                                                                    answer_option: "Options",
-                                                                },
-                                                                {
-                                                                    answer_type: workbook[i].data[j][16]?.toString(),
-                                                                    answer_content: workbook[i].data[j][17]?.toString(),
-                                                                    answer_display: workbook[i].data[j][18]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j][19]?.toString(),
-                                                                    answer_option: "Options",
-                                                                },
-                                                                {
-                                                                    answer_type: workbook[i].data[j][20]?.toString(),
-                                                                    answer_content: workbook[i].data[j][21]?.toString(),
-                                                                    answer_display: workbook[i].data[j][22]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j][23]?.toString(),
-                                                                    answer_option: "Options",
+                                                        let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
+                                                        let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
+                                                        let congnitive = disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase());
+                                                        if (!helper.isEmptyObject(category) || !helper.isEmptyObject(source) || !helper.isEmptyObject(congnitive)) {
+                                                            tempUserId = helper.getRandomString()
+                                                            questionsData.push({
+                                                                question_id: tempUserId,
+                                                                answers_of_question: [
+                                                                    {
+                                                                        answer_type: workbook[i].data[j][8]?.toString(),
+                                                                        answer_content: workbook[i].data[j][9]?.toString(),
+                                                                        answer_display: workbook[i].data[j][10]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j][11]?.toString(),
+                                                                        answer_option: "Options",
+                                                                    },
+                                                                    {
+                                                                        answer_type: workbook[i].data[j][12]?.toString(),
+                                                                        answer_content: workbook[i].data[j][13]?.toString(),
+                                                                        answer_display: workbook[i].data[j][14]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j][15]?.toString(),
+                                                                        answer_option: "Options",
+                                                                    },
+                                                                    {
+                                                                        answer_type: workbook[i].data[j][16]?.toString(),
+                                                                        answer_content: workbook[i].data[j][17]?.toString(),
+                                                                        answer_display: workbook[i].data[j][18]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j][19]?.toString(),
+                                                                        answer_option: "Options",
+                                                                    },
+                                                                    {
+                                                                        answer_type: workbook[i].data[j][20]?.toString(),
+                                                                        answer_content: workbook[i].data[j][21]?.toString(),
+                                                                        answer_display: workbook[i].data[j][22]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j][23]?.toString(),
+                                                                        answer_option: "Options",
+                                                                    }
+                                                                ],
+                                                                answer_explanation: workbook[i].data[j]?.[24],
+                                                                appears_in: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? 'preOrPost' : worksheetOrTestArray.includes(workbook[i].data[j][4]) ? 'worksheetOrTest' : ["preOrPost", "worksheetOrTest"],
+                                                                cognitive_skill: disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase())?.cognitive_id || "N.A.",
+                                                                question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
+                                                                difficulty_level: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? "N.A." : workbook[i].data[j]?.[5]?.toLowerCase(),
+                                                                display_answer: "N.A.",
+                                                                lc_question_label: workbook[i].data[j]?.[0],
+                                                                question_label: workbook[i].data[j]?.[0],
+                                                                marks: workbook[i].data[j]?.[7],
+                                                                question_active_status: "Active",
+                                                                question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase())?.category_id || "N.A.",
+                                                                question_disclaimer: [],
+                                                                question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase())?.source_id || "N.A.",
+                                                                question_status: "Save",
+                                                                question_type: workbook[i].name,
+                                                                question_voice_note: "N.A.",
+                                                                show_math_keyboard: "No",
+                                                                common_id: constant.constValues.common_id,
+                                                                created_ts: helper.getCurrentTimestamp(),
+                                                                updated_ts: helper.getCurrentTimestamp()
+                                                            });
+                                                        } else {
+                                                            const fields = [
+                                                                { key: category, column: 1, message: "Category is Not Available" },
+                                                                { key: source, column: 3, message: "Questions Source is Not Available" },
+                                                                { key: congnitive, column: 2, message: "Cognitive Skills is Not Available" }
+                                                            ];
+                                                            fields.forEach(({ key, column, message }) => {
+                                                                if (helper.isEmptyObject(key)) {
+                                                                    errorRes.push({
+                                                                        sheet: workbook[i].name,
+                                                                        rowNo: j,
+                                                                        reason: workbook[i].data[j][column].toString() + " " + message
+                                                                    });
                                                                 }
-                                                            ],
-                                                            answer_explanation: workbook[i].data[j]?.[24],
-                                                            appears_in: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? 'preOrPost' : worksheetOrTestArray.includes(workbook[i].data[j][4]) ? 'worksheetOrTest' : ["preOrPost", "worksheetOrTest"],
-                                                            cognitive_skill: "",
-                                                            question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
-                                                            difficulty_level: workbook[i].data[j]?.[5]?.toLowerCase(),
-                                                            display_answer: "N.A.",
-                                                            lc_question_label: workbook[i].data[j]?.[0],
-                                                            question_label: workbook[i].data[j]?.[0],
-                                                            marks: workbook[i].data[j]?.[7],
-                                                            question_active_status: "Active",
-                                                            question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase())?.category_id || "N.A.",
-                                                            question_disclaimer: [],
-                                                            question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase())?.source_id || "N.A.",
-                                                            question_status: "Save",
-                                                            question_type: workbook[i].name,
-                                                            question_voice_note: "N.A.",
-                                                            show_math_keyboard: "No",
-                                                            common_id: constant.constValues.common_id,
-                                                            created_ts: helper.getCurrentTimestamp(),
-                                                            updated_ts: helper.getCurrentTimestamp()
-                                                        });
+                                                            });
+                                                        }
                                                     } else {
                                                         errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: "Found Duplicate Label!" });
                                                     }
@@ -314,45 +340,59 @@ exports.questionBulkUpload = async (request, reqToken, callback) => {
                                             if (workbook[i].data[j]?.length > 5 && workbook[i].data[j]?.[0]) {
                                                 if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
-                                                        tempUserId = helper.getRandomString()
-                                                        questionsData.push({
-                                                            question_id: tempUserId,
-                                                            answers_of_question: [
-                                                                {
-                                                                    answer_type: workbook[i].data[j]?.[8]?.toString(),
-                                                                    answer_content: workbook[i].data[j]?.[9]?.toString(),
-                                                                    answer_display: workbook[i].data[j]?.[10]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j]?.[11]?.toString(),
-                                                                    answer_option: workbook[i].data[j]?.[12],
-                                                                },
-                                                            ],
-                                                            answer_explanation: workbook[i].data[j]?.[13],
-                                                            appears_in: workbook[i].data[j]?.[4],
-                                                            cognitive_skill: workbook[i].data[j]?.[2]?.toUpperCase(),
-                                                            question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
-                                                            difficulty_level: workbook[i].data[j]?.[5]?.toLowerCase(),
-                                                            display_answer: "N.A.",
-                                                            lc_question_label: workbook[i].data[j]?.[0],
-                                                            question_label: workbook[i].data[j]?.[0],
-                                                            marks: workbook[i].data[j]?.[7],
-                                                            question_active_status: "Active",
-                                                            question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j][1]?.toUpperCase())?.category_id || "N.A.",
-                                                            question_disclaimer: [],
-                                                            question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j][3]?.toUpperCase())?.source_id || "N.A.",
-                                                            question_status: "Save",
-                                                            question_type: workbook[i].name,
-                                                            question_voice_note: "N.A.",
-                                                            show_math_keyboard: "No",
-                                                            common_id: constant.constValues.common_id,
-                                                            created_ts: helper.getCurrentTimestamp(),
-                                                            updated_ts: helper.getCurrentTimestamp()
-                                                        });
-
-                                                        // }
-                                                        // }else {
-                                                        //     console.log(workbook[i].name + ": EMPTY FIELDS IN SHEET ROW :" + j);
-                                                        //     errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: "Found Empty Cells!" });
-                                                        // }
+                                                        let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
+                                                        let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
+                                                        let congnitive = disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase());
+                                                        if (!helper.isEmptyObject(category) || !helper.isEmptyObject(source) || !helper.isEmptyObject(congnitive)) {
+                                                            tempUserId = helper.getRandomString()
+                                                            questionsData.push({
+                                                                question_id: tempUserId,
+                                                                answers_of_question: [
+                                                                    {
+                                                                        answer_type: workbook[i].data[j]?.[8]?.toString(),
+                                                                        answer_content: workbook[i].data[j]?.[9]?.toString(),
+                                                                        answer_display: workbook[i].data[j]?.[10]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j]?.[11]?.toString(),
+                                                                        answer_option: workbook[i].data[j]?.[12],
+                                                                    },
+                                                                ],
+                                                                answer_explanation: workbook[i].data[j]?.[13],
+                                                                appears_in: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? 'preOrPost' : worksheetOrTestArray.includes(workbook[i].data[j][4]) ? 'worksheetOrTest' : ["preOrPost", "worksheetOrTest"],
+                                                                cognitive_skill: disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase())?.cognitive_id || "N.A.",
+                                                                question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
+                                                                difficulty_level: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? "N.A." : workbook[i].data[j]?.[5]?.toLowerCase(),
+                                                                display_answer: "N.A.",
+                                                                lc_question_label: workbook[i].data[j]?.[0],
+                                                                question_label: workbook[i].data[j]?.[0],
+                                                                marks: workbook[i].data[j]?.[7],
+                                                                question_active_status: "Active",
+                                                                question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j][1]?.toUpperCase())?.category_id || "N.A.",
+                                                                question_disclaimer: [],
+                                                                question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j][3]?.toUpperCase())?.source_id || "N.A.",
+                                                                question_status: "Save",
+                                                                question_type: workbook[i].name,
+                                                                question_voice_note: "N.A.",
+                                                                show_math_keyboard: "No",
+                                                                common_id: constant.constValues.common_id,
+                                                                created_ts: helper.getCurrentTimestamp(),
+                                                                updated_ts: helper.getCurrentTimestamp()
+                                                            });
+                                                        } else {
+                                                            const fields = [
+                                                                { key: category, column: 1, message: "Category is Not Available" },
+                                                                { key: source, column: 3, message: "Questions Source is Not Available" },
+                                                                { key: congnitive, column: 2, message: "Cognitive Skills is Not Available" }
+                                                            ];
+                                                            fields.forEach(({ key, column, message }) => {
+                                                                if (helper.isEmptyObject(key)) {
+                                                                    errorRes.push({
+                                                                        sheet: workbook[i].name,
+                                                                        rowNo: j,
+                                                                        reason: workbook[i].data[j][column].toString() + " " + message
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
                                                     } else {
                                                         errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: "Found Duplicate Label!" });
                                                     }
@@ -367,37 +407,57 @@ exports.questionBulkUpload = async (request, reqToken, callback) => {
                                             if (workbook[i].data[j]?.length > 5 && workbook[i].data[j]?.[0]) {
                                                 if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
-                                                        tempUserId = helper.getRandomString()
-                                                        questionsData.push({
-                                                            question_id: tempUserId,
-                                                            answers_of_question: [
-                                                                {
-                                                                    answer_type: workbook[i].data[j]?.[9]?.toString(),
-                                                                    answer_content: workbook[i].data[j]?.[11]?.toString(),
-                                                                    answer_weightage: workbook[i].data[j]?.[10]?.toString(),
-                                                                },
-                                                            ],
-                                                            answer_explanation: workbook[i].data[j]?.[12] || "N.A.",
-                                                            appears_in: workbook[i].data[j]?.[4],
-                                                            cognitive_skill: workbook[i].data[j]?.[2]?.toUpperCase(),
-                                                            question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
-                                                            difficulty_level: workbook[i].data[j]?.[5]?.toLowerCase(),
-                                                            display_answer: workbook[i].data[j]?.[8],
-                                                            lc_question_label: workbook[i].data[j]?.[0],
-                                                            question_label: workbook[i].data[j]?.[0],
-                                                            marks: workbook[i].data[j]?.[7],
-                                                            question_active_status: "Active",
-                                                            question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase())?.category_id || "N.A.",
-                                                            question_disclaimer: [],
-                                                            question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase())?.source_id || "N.A.",
-                                                            question_status: "Save",
-                                                            question_type: workbook[i].name,
-                                                            question_voice_note: "N.A.",
-                                                            show_math_keyboard: "No",
-                                                            common_id: constant.constValues.common_id,
-                                                            created_ts: helper.getCurrentTimestamp(),
-                                                            updated_ts: helper.getCurrentTimestamp()
-                                                        });
+                                                        let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
+                                                        let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
+                                                        let congnitive = disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase());
+                                                        if (!helper.isEmptyObject(category) || !helper.isEmptyObject(source) || !helper.isEmptyObject(congnitive)) {
+                                                            tempUserId = helper.getRandomString()
+                                                            questionsData.push({
+                                                                question_id: tempUserId,
+                                                                answers_of_question: [
+                                                                    {
+                                                                        answer_type: workbook[i].data[j]?.[9]?.toString(),
+                                                                        answer_content: workbook[i].data[j]?.[11]?.toString(),
+                                                                        answer_weightage: workbook[i].data[j]?.[10]?.toString(),
+                                                                    },
+                                                                ],
+                                                                answer_explanation: workbook[i].data[j]?.[12] || "N.A.",
+                                                                appears_in: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? 'preOrPost' : worksheetOrTestArray.includes(workbook[i].data[j][4]) ? 'worksheetOrTest' : ["preOrPost", "worksheetOrTest"],
+                                                                cognitive_skill: disclaimer_response?.cognitive_skills?.find(skill => skill?.cognitive_name == workbook[i]?.data[j]?.[2]?.toUpperCase())?.cognitive_id || "N.A.",
+                                                                question_content: `<p>${workbook[i].data[j]?.[6]}</p>`,
+                                                                difficulty_level: helper.prePostArray.includes(workbook[i].data[j]?.[4]) ? "N.A." : workbook[i].data[j]?.[5]?.toLowerCase(),
+                                                                display_answer: `<p>${workbook[i].data[j]?.[8]}</p>`,
+                                                                lc_question_label: workbook[i].data[j]?.[0],
+                                                                question_label: workbook[i].data[j]?.[0],
+                                                                marks: workbook[i].data[j]?.[7],
+                                                                question_active_status: "Active",
+                                                                question_category: disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase())?.category_id || "N.A.",
+                                                                question_disclaimer: [],
+                                                                question_source: disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase())?.source_id || "N.A.",
+                                                                question_status: "Save",
+                                                                question_type: workbook[i].name,
+                                                                question_voice_note: "N.A.",
+                                                                show_math_keyboard: "No",
+                                                                common_id: constant.constValues.common_id,
+                                                                created_ts: helper.getCurrentTimestamp(),
+                                                                updated_ts: helper.getCurrentTimestamp()
+                                                            });
+                                                        } else {
+                                                            const fields = [
+                                                                { key: category, column: 1, message: "Category is Not Available" },
+                                                                { key: source, column: 3, message: "Questions Source is Not Available" },
+                                                                { key: congnitive, column: 2, message: "Cognitive Skills is Not Available" }
+                                                            ];
+                                                            fields.forEach(({ key, column, message }) => {
+                                                                if (helper.isEmptyObject(key)) {
+                                                                    errorRes.push({
+                                                                        sheet: workbook[i].name,
+                                                                        rowNo: j,
+                                                                        reason: workbook[i].data[j][column]?.toString() + " " + message
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
                                                     } else {
                                                         errorRes.push({ sheet: workbook[i].name, rowNo: j, reason: "Found Duplicate Label!" });
                                                     }
@@ -428,7 +488,7 @@ exports.questionBulkUpload = async (request, reqToken, callback) => {
                                 request.data['questions'] = questionsData;
                                 questionRepository.bulkInsertQuestions(request, function (insert_many_questions_err, insert_many_questions_response) {
                                     if (insert_many_questions_err) {
-                                        console.log("ERROR : Insert Question Data");
+                                        console.log("ERROR : Insert Question Data", insert_many_questions_err);
                                         callback(400, errorRes);
                                     } else {
                                         console.log("Question Data Inserted Successfully");
