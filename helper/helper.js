@@ -96,10 +96,10 @@ exports.validateQuestionRows = async function (sheetName, rowVal) {
     if (sheetName === "Objective") {
         return (await Promise.all(rowVal.slice(0, 24).map(exports.checkEmpty))).every(val => val === true);
     }
-    else if (sheetName === "Teachers") {
+    else if (sheetName === "Subjective") {
         return (await Promise.all(rowVal.slice(0, 13).map(exports.checkEmpty))).every(val => val === true);
     }
-    else if (sheetName === "Subjective") {
+    else if (sheetName === "Descriptive") {
         return (await Promise.all(rowVal.slice(0, 12).map(exports.checkEmpty))).every(val => val === true);
     } else {
         console.log("DEFAULT SHEET NAME");
