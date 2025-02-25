@@ -186,6 +186,78 @@ exports.insertnewQuestion = function (request, callback) {
     });
 };
 
+exports.bulkInsertQuestions = function (request, callback) {
+    dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
+        if (DBErr) {
+            console.log("Question Data Database Error", DBErr);
+            callback(500, constant.messages.DATABASE_ERROR);
+        } else {
+            let docClient = dynamoDBCall;
+
+            if (!Array.isArray(request.data.questions) || request.data.questions.length === 0) {
+                return callback(400, { message: "Invalid or empty question list." });
+            }
+
+            let items = request.data.questions.map((question) => {
+                let appearsInValue = Array.isArray(question.appears_in)
+                    ? question.appears_in
+                    : [question.appears_in];
+
+                return {
+                    PutRequest: {
+                        Item: {
+                            "question_id": helper.getRandomString(),
+                            "question_type": question.question_type,
+                            "question_voice_note": question.question_voice_note,
+                            "question_content": question.question_content,
+                            "answers_of_question": question.answers_of_question,
+                            "question_status": question.question_status,
+                            "show_math_keyboard": question.show_math_keyboard,
+                            "question_disclaimer": question.question_disclaimer,
+                            "display_answer": question.display_answer,
+                            "appears_in": appearsInValue,
+                            "marks": question.marks,
+                            "question_source": question.question_source,
+                            "cognitive_skill": question.cognitive_skill,
+                            "answer_explanation": question.answer_explanation,
+                            "question_label": question.question_label?.trim(),
+                            "lc_question_label": question.question_label?.toLowerCase().replace(/ /g, ''),
+                            "question_category": question.question_category,
+                            "difficulty_level": question.difficulty_level,
+                            "question_active_status": 'Active',
+                            "common_id": constant.constValues.common_id,
+                            "created_ts": helper.getCurrentTimestamp(),
+                            "updated_ts": helper.getCurrentTimestamp(),
+                        }
+                    }
+                };
+            });
+
+            let batches = [];
+            for (let i = 0; i < items.length; i += 25) {
+                batches.push(items.slice(i, i + 25));
+            }
+
+            let batchWritePromises = batches.map((batch) => {
+                let params = {
+                    RequestItems: {
+                        [TABLE_NAMES.upschool_question_table]: batch
+                    }
+                };
+                return docClient.batchWrite(params).promise();
+            });
+
+            Promise.all(batchWritePromises)
+                .then((responses) => {
+                    callback(null, { message: "Bulk insert successful", responses });
+                })
+                .catch((error) => {
+                    console.error("Error in bulk insert:", error);
+                    callback(500, constant.messages.DATABASE_ERROR);
+                });
+        }
+    });
+};
 
 exports.fetchQuestionById = function (request, callback) {
 
@@ -359,6 +431,63 @@ exports.fetchQuestionByLabel = function (request, callback) {
         }
     });
 }
+
+exports.fetchQuestionByLabel2 = function (request, callback) {
+    dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {
+        if (DBErr) {
+            console.log("Question Data Database Error", DBErr);
+            return callback(500, constant.messages.DATABASE_ERROR);
+        }
+        let docClient = dynamoDBCall;
+        let questionLabels = request.data.question_labels.map(label => label.toLowerCase().replace(/ /g, ''));
+        questionLabels = [...new Set(questionLabels)];
+
+        if (questionLabels.length === 0) {
+            return callback(null, []);
+        }
+
+        const batches = [];
+        for (let i = 0; i < questionLabels.length; i += 100) {
+            batches.push(questionLabels.slice(i, i + 100));
+        }
+
+        let allResults = [];
+        const fetchBatch = (batchIndex) => {
+            if (batchIndex >= batches.length) {
+                return callback(null, allResults);
+            }
+
+            const filterExpressions = batches[batchIndex].map((_, index) => `lc_question_label = :lc_label${index}`).join(" OR ");
+            const expressionAttributeValues = { ":common_id": constant.constValues.common_id };
+
+            batches[batchIndex].forEach((label, index) => {
+                expressionAttributeValues[`:lc_label${index}`] = label;
+            });
+
+            const readParams = {
+                TableName: TABLE_NAMES.upschool_question_table,
+                IndexName: indexName.Indexes.common_id_index,
+                KeyConditionExpression: "common_id = :common_id",
+                FilterExpression: filterExpressions,
+                ExpressionAttributeValues: expressionAttributeValues,
+                ProjectionExpression: "question_id, created_ts, question_active_status, question_status, question_type, updated_ts, question_label"
+            };
+
+            DATABASE_TABLE.queryRecord(docClient, readParams, (err, result) => {
+                if (err) {
+                    return callback(500, `Error fetching question data: ${err.message}`);
+                }
+
+                if (result.Items) {
+                    allResults.push(...result.Items);
+                }
+                fetchBatch(batchIndex + 1);
+            });
+        };
+        fetchBatch(0);
+    });
+};
+
 exports.fetchQuestionData = function (request, callback) {
 
     dynamoDbCon.getDB(function (DBErr, dynamoDBCall) {

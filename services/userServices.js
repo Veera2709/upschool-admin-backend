@@ -23,7 +23,7 @@ exports.getBulkUploadUrl = async function (request, callback) {
 
 	let URL_EXPIRATION_SECONDS = 300;
 
-	let randomID = request.data.school_id + '_' + helper.getRandomString();
+	let randomID = request?.data?.school_id || "" + '_' + helper.getRandomString();
 
 	let Key = `temp/${randomID}` + file_ext;
 

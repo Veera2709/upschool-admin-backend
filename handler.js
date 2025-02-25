@@ -173,6 +173,7 @@ app.post("/v1/fetchIndividualQuestionData", validator.validUser, questionControl
 app.post("/v1/editQuestion", validator.validUser, questionController.editQuestion);
 app.post("/v1/toggleQuestionStatus", validator.validUser, questionController.toggleQuestionStatus);
 app.post("/v1/bulkToggleQuestionStatus", validator.validUser, questionController.bulkToggleQuestionStatus);
+app.post("/v1/questionBulkUpload", questionController.questionBulkUpload);
 
 // Group :
 app.post("/v1/fetchAllGroupsData", validator.validUser, groupController.fetchAllGroupsData);
