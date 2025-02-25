@@ -73,8 +73,7 @@ exports.bulkToggleQuestionStatus = (req, res, next) => {
 
 exports.questionBulkUpload = (req, res, next) => {
     let request = req.body;
-    let reqToken = req.header('Authorization');
-    questionServices.questionBulkUpload(request, reqToken, function (bulkUploadQuestion_err, bulkQuestionUpload_response) {
+    questionServices.questionBulkUpload(request, function (bulkUploadQuestion_err, bulkQuestionUpload_response) {
         if (bulkUploadQuestion_err) {
             res.status(bulkUploadQuestion_err).json(bulkQuestionUpload_response);
         } else {
