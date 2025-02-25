@@ -1120,6 +1120,9 @@ exports.getCMSUsersBasedonRoleStatus = function (request, callback) {
 			switch (userType) {
 				case 'admin':
 					let adminData = fetch_all_users_response.Items.filter(e => e.user_role === userType);
+					adminData.sort((a, b) => {
+						return new Date(b.updated_ts) - new Date(a.updated_ts);
+					});
 					callback(fetch_all_users_err, adminData);
 					break;
 				case 'reviewer':
@@ -1128,6 +1131,9 @@ exports.getCMSUsersBasedonRoleStatus = function (request, callback) {
 					reviewer_data.map(e => {
 						let checkReviewer = e.user_role.filter(f => f.roles.includes(userType));
 						checkReviewer.length > 0 && reviewerData.push(e);
+					});
+					reviewerData.sort((a, b) => {
+						return new Date(b.updated_ts) - new Date(a.updated_ts);
 					});
 					console.log("All Reviewers Fetched Successfully");
 					callback(fetch_all_users_err, reviewerData);
@@ -1140,6 +1146,9 @@ exports.getCMSUsersBasedonRoleStatus = function (request, callback) {
 						let checkCreator = e.user_role.filter(f => f.roles.includes(userType));
 						checkCreator.length > 0 && creatorData.push(e);
 					});
+					creatorData.sort((a, b) => {
+						return new Date(b.updated_ts) - new Date(a.updated_ts);
+					});
 					console.log("All Creators Fetched Successfully");
 					callback(fetch_all_users_err, creatorData);
 					break;
@@ -1149,6 +1158,9 @@ exports.getCMSUsersBasedonRoleStatus = function (request, callback) {
 					publisher_data.map(e => {
 						let checkPublisher = e.user_role.filter(f => f.roles.includes(userType));
 						checkPublisher.length > 0 && publisherData.push(e);
+					});
+					publisherData.sort((a, b) => {
+						return new Date(b.updated_ts) - new Date(a.updated_ts);
 					});
 					console.log("All Publishers Fetched Successfully");
 					callback(fetch_all_users_err, publisherData);
@@ -1275,7 +1287,9 @@ exports.fetchPaginatedUsers = function (request, callback) {
 				console.log(get_paginated_users_err);
 				callback(get_paginated_users_err, get_paginated_users_response);
 			} else {
-
+				get_paginated_users_response.Items.sort((a, b) => {
+					return new Date(b.updated_ts) - new Date(a.updated_ts);
+				});  
 				console.log("Paginated Users fetched Successfully");
 				callback(get_paginated_users_err, get_paginated_users_response);
 			}
