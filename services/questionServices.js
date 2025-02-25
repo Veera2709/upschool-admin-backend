@@ -250,7 +250,7 @@ exports.questionBulkUpload = async (request, callback) => {
                                     if (j < workbook[i].data.length) {
                                         if (workbook[i].name == "Objective") {
                                             if (workbook[i].data[j].length > 5 && workbook[i].data[j]?.[0]) {
-                                                if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
+                                                if (workbook[i].data[j].length < 25 && await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
                                                         let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
                                                         let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
@@ -338,7 +338,7 @@ exports.questionBulkUpload = async (request, callback) => {
                                         }
                                         else if (workbook[i].name == "Subjective") {
                                             if (workbook[i].data[j]?.length > 5 && workbook[i].data[j]?.[0]) {
-                                                if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
+                                                if (workbook[i].data[j].length < 14 && await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
                                                         let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
                                                         let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
@@ -405,7 +405,7 @@ exports.questionBulkUpload = async (request, callback) => {
                                         }
                                         else if (workbook[i].name == "Descriptive") {
                                             if (workbook[i].data[j]?.length > 5 && workbook[i].data[j]?.[0]) {
-                                                if (await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
+                                                if (workbook[i].data[j].length < 13 && await helper.validateQuestionRows(workbook[i].name, workbook[i].data[j])) {
                                                     if (!duplicateLables.includes(workbook[i].data[j][0])) {
                                                         let category = disclaimer_response?.categories?.find(category => category?.category_name == workbook[i]?.data[j]?.[1]?.toUpperCase());
                                                         let source = disclaimer_response?.question_sources?.find(source => source?.source_name == workbook[i]?.data[j]?.[3]?.toUpperCase());
