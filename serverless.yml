@@ -604,3 +604,7 @@ functions:
           path: /v1/setTestConfiguration
           method: POST
           cors: true
+      - http:
+          path: /v1/questionBulkUpload
+          method: POST
+          cors: true
